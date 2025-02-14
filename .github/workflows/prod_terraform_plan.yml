@@ -198,7 +198,7 @@ on:
         default: ''
 
 env:
-  AZURE_REGION: Korea Central  # 원하는 Azure 리전으로 변경
+  AZURE_REGION: koreacentral  # 원하는 Azure 리전으로 변경
 
 jobs:
   backend_setup:
