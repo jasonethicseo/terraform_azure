@@ -186,7 +186,7 @@ on:
       # - "develop"
       # - "main"
     paths-ignore:
-      - 'main.yml'
+      # - 'main.yml'
 
   # 2) 수동 실행(Apply/Destroy)용
   workflow_dispatch:
