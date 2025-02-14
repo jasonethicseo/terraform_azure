@@ -14,7 +14,7 @@ on:
 
 # 원하는 Azure Region (영문 소문자, 예: eastus, koreacentral 등)
 env:
-  AZURE_REGION: eastus
+  AZURE_REGION: koreacentral
 
 jobs:
   backend_setup:
