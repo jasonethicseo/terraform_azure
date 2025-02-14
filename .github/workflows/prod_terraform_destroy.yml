@@ -1,5 +1,4 @@
-# .github/workflows/terraform_destroy.yaml
-name: 'Terraform Destroy'
+name: 'Terraform Destroy on Azure'
 
 on:
   workflow_dispatch:
@@ -10,7 +9,7 @@ on:
         default: 'DESTROY'
 
 env:
-  AWS_REGION: us-west-2   # 원하는 AWS 리전으로 설정 ###
+  AZURE_REGION: koreacentral  # 원하는 Azure 리전 (소문자, 예: koreacentral, eastus 등)
 
 jobs:
   backend_destroy:
@@ -21,12 +20,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+      # Azure CLI 로그인 (Service Principal 사용)
+      - name: Azure Login
+        uses: azure/login@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Terraform이 Service Principal 인증을 사용하도록 ARM 환경 변수 설정
+      - name: Set ARM environment variables
+        run: |
+          echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -47,9 +53,10 @@ jobs:
         run: |
           cd terraform_source
           terraform init \
-            -backend-config="region=us-west-2" \
-            -backend-config="bucket=ctk-prod-terraform-state" \
-            -backend-config="key=terraform/prod/terraform.tfstate"
+            -backend-config="resource_group_name=rg-terraform-backend" \
+            -backend-config="storage_account_name=manoittesttfstate" \
+            -backend-config="container_name=tfstate-manoit-blob" \
+            -backend-config="key=dev/terraform/terraform.tfstate"
 
       - name: Terraform Destroy
         run: |
