@@ -300,9 +300,9 @@ jobs:
           cd terraform_source
           terraform init \
             -backend-config="resource_group_name=rg-terraform-backend" \
-            -backend-config="storage_account_name=ctkprodterraformstate" \
-            -backend-config="container_name=tfstate" \
-            -backend-config="key=prod/terraform/terraform.tfstate"
+            -backend-config="storage_account_name=manoittesttfstate" \
+            -backend-config="container_name=tfstate-manoit-blob" \
+            -backend-config="key=dev/terraform/terraform.tfstate"
 
       - name: Terraform Plan
         run: |
