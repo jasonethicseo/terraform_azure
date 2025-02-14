@@ -10,6 +10,16 @@ terraform {
   }
 }
 
+terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg-terraform-backend"
+    storage_account_name = "manoittesttfstate"
+    container_name       = "tfstate-manoit-blob"
+    key                  = "terraform.tfstate"
+  }
+}
+
+
 provider "azurerm" {
   features {}
 }
