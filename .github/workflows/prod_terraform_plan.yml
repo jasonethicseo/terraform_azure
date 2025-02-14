@@ -180,10 +180,10 @@ name: 'Terraform on Azure'
 on:
   push:
     branches:
-      - "dev"
+      - "main"
   pull_request:
     branches:
-      - "dev"
+      - "main"
     paths-ignore:
       - 'main.yml'
   workflow_dispatch:
