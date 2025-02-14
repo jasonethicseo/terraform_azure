@@ -43,7 +43,7 @@ resource "azurerm_mysql_flexible_server" "db_manoit" {
 
 
   depends_on = [azurerm_virtual_network.vnet,
-  azurerm_subnet.dbsubnet_1]
+  azurerm_subnet.dbsubnet_1, azurerm_private_dns_zone_virtual_network_link.dns_link]
 
 
 }
