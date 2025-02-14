@@ -1,0 +1,62 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: game-2048
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: game-2048
+  namespace: game-2048
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: game-2048
+  template:
+    metadata:
+      labels:
+        app: game-2048
+    spec:
+      containers:
+      - name: game-2048
+        image: alexwhen/docker-2048
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: game-2048
+  namespace: game-2048
+spec:
+  type: ClusterIP # LoadBalancer or ClusterIP
+  ports:
+  - port: 80
+    targetPort: 80
+    protocol: TCP
+  selector:
+    app: game-2048
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: game2048-ingress
+  namespace: game-2048
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"  # HTTPS 강제 리디렉션 비활성화
+spec:
+  ingressClassName: nginx  # 설치된 Ingress Controller 지정
+  rules:
+  - host:   # 도메인이 없으면 이 부분 삭제 가능
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: game-2048
+            port:
+              number: 80

@@ -1,0 +1,57 @@
+# .github/workflows/terraform_destroy.yaml
+name: 'Terraform Destroy'
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: 'Confirm if you want to destroy the Terraform backend (type DESTROY to confirm)'
+        required: true
+        default: 'DESTROY'
+
+env:
+  AWS_REGION: us-west-2   # 원하는 AWS 리전으로 설정 ###
+
+jobs:
+  backend_destroy:
+    name: 'Terraform Destroy Backend'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: '1.8.0'
+
+      - name: Confirm Destruction
+        if: ${{ github.event.inputs.confirm_destroy == 'DESTROY' }}
+        run: echo "Destruction confirmed. Proceeding with Terraform destroy operation."
+
+      - name: Abort Destruction
+        if: ${{ github.event.inputs.confirm_destroy != 'DESTROY' }}
+        run: |
+          echo "Destruction not confirmed. Exiting workflow without performing destruction."
+          exit 1
+
+      - name: Terraform Init for Destroy
+        run: |
+          cd terraform_source
+          terraform init \
+            -backend-config="region=us-west-2" \
+            -backend-config="bucket=ctk-prod-terraform-state" \
+            -backend-config="key=terraform/prod/terraform.tfstate"
+
+      - name: Terraform Destroy
+        run: |
+          cd terraform_source
+          terraform destroy -auto-approve
