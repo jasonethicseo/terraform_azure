@@ -1,89 +1,39 @@
-# provider "aws" {
-#   region = "eu-central-1"
-# }
+# Terraform 버전 및 제공자 설정
+terraform {
+  required_version = ">= 1.0.0"
 
-# resource "aws_s3_bucket" "terraform_state" {
-#   bucket = "jung9546-practice4"
-# }
-
-# resource "aws_s3_bucket_versioning" "enalbed" {
-#   bucket = aws_s3_bucket.terraform_state.id
-#   versioning_configuration {
-#     status = "Enabled"
-#   }
-# }
-
-# resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
-#   bucket = aws_s3_bucket.terraform_state.id
-  
-#   rule {
-#     apply_server_side_encryption_by_default {
-#       sse_algorithm = "AES256"
-#     }
-#   }
-# }
-
-# resource "aws_s3_bucket_public_access_block" "public_access" {
-#   bucket = aws_s3_bucket.terraform_state.id
-#   block_public_acls = true
-#   block_public_policy = true
-#   ignore_public_acls = true
-#   restrict_public_buckets = true
-# }
-
-# resource "aws_dynamodb_table" "terraform_lock" {
-#   name = "jung9546-practice4"
-#   billing_mode = "PAY_PER_REQUEST"
-#   hash_key = "LockID"
-
-#   attribute {
-#     name = "LockID"
-#     type = "S"
-#   }
-# }
-
-
-
-provider "aws" {
-  region = "us-west-2"
-}
-
-resource "aws_s3_bucket" "terraform_state" { 
-    bucket = "ctk-prod-terraform-state"
-}
-
-resource "aws_s3_bucket_versioning" "enabled" { 
-    bucket = aws_s3_bucket.terraform_state.id 
-    versioning_configuration {
-        status = "Enabled"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 3.64.0, < 4.0"
     }
+  }
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "default" {
-    bucket = aws_s3_bucket.terraform_state.id
-
-    rule {
-        apply_server_side_encryption_by_default {
-            sse_algorithm = "AES256"
-        }
-    }
+provider "azurerm" {
+  features {}
 }
 
-resource "aws_s3_bucket_public_access_block" "public_access" {
-    bucket = aws_s3_bucket.terraform_state.id
-    block_public_acls = true
-    block_public_policy = true
-    ignore_public_acls = true
-    restrict_public_buckets = true
+# Terraform 상태를 저장할 리소스 그룹 생성
+resource "azurerm_resource_group" "tf_backend" {
+  name     = "rg-terraform-backend"
+  location = "Korea Central"  # 원하는 Azure 지역으로 변경
 }
 
-resource "aws_dynamodb_table" "terraform_lock" {
-    name = "ctk-prod-terraform-lock"
-    billing_mode = "PAY_PER_REQUEST"
-    hash_key = "LockID"
+# Terraform 상태를 저장할 Storage Account 생성
+resource "azurerm_storage_account" "tf_state" {
+  name                     = "manoittesttfstate"  # 반드시 전역에서 유일한 이름 (소문자, 숫자만)
+  resource_group_name      = azurerm_resource_group.tf_backend.name
+  location                 = azurerm_resource_group.tf_backend.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  https_traffic_only_enabled = true
+  min_tls_version           = "TLS1_2"
+}
 
-    attribute {
-        name = "LockID"
-        type = "S"
-    }
+# Terraform 상태를 저장할 Blob Container 생성
+resource "azurerm_storage_container" "tf_state_container" {
+  name                  = "tfstate-manoit-blob"   # 컨테이너 이름 (원하는 이름으로 변경 가능)
+  storage_account_name  = azurerm_storage_account.tf_state.name
+  container_access_type = "private"
 }

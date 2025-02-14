@@ -4,7 +4,7 @@ data "azurerm_key_vault" "key_vault" {
 }
 
 data "azurerm_key_vault_secret" "ssh_public_key" {
-  name         = "0205-test-key"                      # 비밀 이름
+  name         = "0206-test-key"                      # 비밀 이름
   key_vault_id = data.azurerm_key_vault.key_vault.id
 }
 
