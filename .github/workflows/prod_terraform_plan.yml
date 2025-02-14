@@ -179,11 +179,11 @@ name: 'Terraform'
 on:
   push:
     branches:
-      # - "develop"
+      - "develop"
       # - "main"
   pull_request:
     branches:
-      # - "develop"
+      - "develop"
       # - "main"
     paths-ignore:
       # - 'main.yml'
