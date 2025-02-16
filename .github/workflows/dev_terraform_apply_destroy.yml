@@ -72,11 +72,11 @@ jobs:
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
   
-        - name: Fail if Destructive Changes Detected
-          if: steps.check_destructive.outputs.has_changes == 'true'
-          run: |
-            echo "Destructive changes detected..."
-            exit 1
+      - name: Fail if Destructive Changes Detected
+        if: steps.check_destructive.outputs.has_changes == 'true'
+        run: |
+          echo "Destructive changes detected..."
+          exit 1
 
       - name: Terraform Apply
         if: github.event.inputs.action == 'apply'
