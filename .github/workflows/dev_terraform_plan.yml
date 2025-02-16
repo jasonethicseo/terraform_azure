@@ -176,7 +176,7 @@
 
 
 
-name: 'Terraform on Azure'
+name: 'Terraform on Azure - Dev'
 
 on:
   push:
