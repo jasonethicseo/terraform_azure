@@ -41,7 +41,8 @@ jobs:
 
       - name: Terraform Init
         working-directory: environments/dev
-        run: terraform init \
+        run: | 
+          terraform init \
               -backend-config="resource_group_name=rg-terraform-backend" \
               -backend-config="storage_account_name=manoittesttfstate" \
               -backend-config="container_name=tfstate-manoit-blob" \
@@ -81,10 +82,12 @@ jobs:
       - name: Terraform Apply
         if: github.event.inputs.action == 'apply'
         working-directory: environments/dev
-        run: terraform apply -auto-approve tfplan
+        run: | 
+          terraform apply -auto-approve tfplan
 
       - name: Terraform Destroy
         if: github.event.inputs.action == 'destroy' && github.event.inputs.confirm_destroy == 'DESTROY'
         working-directory: environments/dev
-        run: terraform destroy -auto-approve
+        run: | 
+          terraform destroy -auto-approve
 ##
