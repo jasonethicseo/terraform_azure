@@ -1,0 +1,9 @@
+variable "storage_account_name" { type = string }
+variable "resource_group_name" { type = string }
+variable "location" { type = string }
+variable "account_tier" { type = string }
+variable "account_replication_type" { type = string }
+variable "index_document" { type = string }
+variable "error_404_document" { type = string }
+variable "container_name" { type = string }
+variable "container_access_type" { type = string }
