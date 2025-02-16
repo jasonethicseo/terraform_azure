@@ -1,0 +1,89 @@
+name: 'Terraform Apply/Destroy - Dev Environment'
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Choose the action to run (apply or destroy)'
+        required: true
+        default: 'apply'
+      confirm_destroy:
+        description: 'Type DESTROY to confirm destroy action'
+        required: false
+        default: ''
+
+env:
+  AZURE_REGION: koreacentral
+
+jobs:
+  terraform_apply_destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set ARM environment variables
+        run: |
+          echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
+          echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
+          echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
+          echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: '1.8.0'
+
+      - name: Terraform Init
+        working-directory: environments/dev
+        run: terraform init \
+              -backend-config="resource_group_name=rg-terraform-backend" \
+              -backend-config="storage_account_name=manoittesttfstate" \
+              -backend-config="container_name=tfstate-manoit-blob" \
+              -backend-config="key=dev/terraform/terraform.tfstate"
+
+      - name: Terraform Plan (for Apply/Destroy)
+        working-directory: environments/dev
+        run: terraform plan -out=tfplan -input=false
+
+      - name: Check for Destructive Changes
+        id: check_destructive
+        run: |
+          cd environments/dev
+          CHANGES=$(terraform show tfplan) || {
+            echo "Error running terraform show:"
+            echo "$CHANGES"
+            exit 1
+          }
+          echo "Full terraform plan output:"
+          echo "$CHANGES"
+
+          # 파괴(`-`) 작업을 감지
+          if echo "$CHANGES" | grep -E '^\s*-' > /dev/null; then
+            echo "Destructive changes detected"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          else
+            echo "No destructive changes found"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          fi
+  
+        - name: Fail if Destructive Changes Detected
+          if: steps.check_destructive.outputs.has_changes == 'true'
+          run: |
+            echo "Destructive changes detected..."
+            exit 1
+
+      - name: Terraform Apply
+        if: github.event.inputs.action == 'apply'
+        working-directory: environments/dev
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Destroy
+        if: github.event.inputs.action == 'destroy' && github.event.inputs.confirm_destroy == 'DESTROY'
+        working-directory: environments/dev
+        run: terraform destroy -auto-approve

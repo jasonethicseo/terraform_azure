@@ -185,18 +185,6 @@ on:
   pull_request:
     branches:
       - "main"
-    paths-ignore:
-      - 'main.yml'
-  workflow_dispatch:
-    inputs:
-      action:
-        description: 'Choose the action to run (plan or apply or destroy)'
-        required: true
-        default: 'plan'
-      confirm_destroy:
-        description: 'Type DESTROY to confirm destroy action'
-        required: false
-        default: ''
 
 env:
   AZURE_REGION: koreacentral
@@ -344,88 +332,88 @@ jobs:
           echo "Destructive changes detected. Aborting plan."
           exit 1
 
-  terraform_apply:
-    name: 'Terraform Apply'
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
-    runs-on: ubuntu-latest
-    needs: terraform_plan
-    environment: develop
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+  # terraform_apply:
+  #   name: 'Terraform Apply'
+  #   if: github.event_name == 'workflow_dispatch' && github.event.inputs.action == 'apply'
+  #   runs-on: ubuntu-latest
+  #   needs: terraform_plan
+  #   environment: develop
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+  #     - name: Azure Login
+  #       uses: azure/login@v1
+  #       with:
+  #         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Set ARM environment variables
-        run: |
-          echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
+  #     - name: Set ARM environment variables
+  #       run: |
+  #         echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
+  #         echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
+  #         echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
+  #         echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: '1.8.0'
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v1
+  #       with:
+  #         terraform_version: '1.8.0'
 
-      - name: Verify tfplan file exists
-        run: |
-          cd environments/dev
-          ls -l tfplan
+  #     - name: Verify tfplan file exists
+  #       run: |
+  #         cd environments/dev
+  #         ls -l tfplan
 
-      - name: Terraform Apply
-        run: |
-          cd environments/dev
-          terraform apply -auto-approve tfplan
+  #     - name: Terraform Apply
+  #       run: |
+  #         cd environments/dev
+  #         terraform apply -auto-approve tfplan
 
-  terraform_destroy:
-    name: 'Terraform Destroy'
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.action == 'destroy' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+  # terraform_destroy:
+  #   name: 'Terraform Destroy'
+  #   runs-on: ubuntu-latest
+  #   if: ${{ github.event.inputs.action == 'destroy' }}
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v2
 
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+  #     - name: Azure Login
+  #       uses: azure/login@v1
+  #       with:
+  #         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Set ARM environment variables
-        run: |
-          echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
-          echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
+  #     - name: Set ARM environment variables
+  #       run: |
+  #         echo "ARM_CLIENT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).clientId }}" >> $GITHUB_ENV
+  #         echo "ARM_CLIENT_SECRET=${{ fromJson(secrets.AZURE_CREDENTIALS).clientSecret }}" >> $GITHUB_ENV
+  #         echo "ARM_TENANT_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).tenantId }}" >> $GITHUB_ENV
+  #         echo "ARM_SUBSCRIPTION_ID=${{ fromJson(secrets.AZURE_CREDENTIALS).subscriptionId }}" >> $GITHUB_ENV
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: '1.8.0'
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v1
+  #       with:
+  #         terraform_version: '1.8.0'
 
-      - name: Confirm Destruction
-        if: ${{ github.event.inputs.confirm_destroy == 'DESTROY' }}
-        run: echo "Destruction confirmed. Proceeding with Terraform destroy operation."
+  #     - name: Confirm Destruction
+  #       if: ${{ github.event.inputs.confirm_destroy == 'DESTROY' }}
+  #       run: echo "Destruction confirmed. Proceeding with Terraform destroy operation."
 
-      - name: Abort Destruction
-        if: ${{ github.event.inputs.confirm_destroy != 'DESTROY' }}
-        run: |
-          echo "Destruction not confirmed. Exiting workflow without performing destruction."
-          exit 1
+  #     - name: Abort Destruction
+  #       if: ${{ github.event.inputs.confirm_destroy != 'DESTROY' }}
+  #       run: |
+  #         echo "Destruction not confirmed. Exiting workflow without performing destruction."
+  #         exit 1
 
-      - name: Terraform Init for Destroy
-        run: |
-          cd environments/dev
-          terraform init \
-            -backend-config="resource_group_name=rg-terraform-backend" \
-            -backend-config="storage_account_name=manoittesttfstate" \
-            -backend-config="container_name=tfstate-manoit-blob" \
-            -backend-config="key=dev/terraform/terraform.tfstate"
+  #     - name: Terraform Init for Destroy
+  #       run: |
+  #         cd environments/dev
+  #         terraform init \
+  #           -backend-config="resource_group_name=rg-terraform-backend" \
+  #           -backend-config="storage_account_name=manoittesttfstate" \
+  #           -backend-config="container_name=tfstate-manoit-blob" \
+  #           -backend-config="key=dev/terraform/terraform.tfstate"
 
-      - name: Terraform Destroy
-        run: |
-          cd environments/dev
-          terraform destroy -auto-approve
+  #     - name: Terraform Destroy
+  #       run: |
+  #         cd environments/dev
+  #         terraform destroy -auto-approve
