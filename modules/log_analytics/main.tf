@@ -10,3 +10,17 @@ resource "azurerm_log_analytics_workspace" "workspace" {
     Managed_By  = "Terraform"
   }
 }
+
+
+resource "azurerm_log_analytics_solution" "container_insights" {
+  solution_name         = "ContainerInsights(${azurerm_log_analytics_workspace.workspace.name})"
+  location              = azurerm_log_analytics_workspace.workspace.location
+  resource_group_name   = azurerm_log_analytics_workspace.workspace.resource_group_name
+  workspace_name        = azurerm_log_analytics_workspace.workspace.name
+  workspace_resource_id = azurerm_log_analytics_workspace.workspace.id
+
+  plan {
+    publisher = "Microsoft"
+    product   = "OMSGallery/ContainerInsights"
+  }
+}
