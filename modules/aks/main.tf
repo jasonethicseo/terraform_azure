@@ -28,7 +28,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   role_based_access_control_enabled = var.rbac_enabled
 
-  oms_agent {
-    log_analytics_workspace_id = var.log_analytics_workspace_id
-  }
+  # oms_agent {
+  #   log_analytics_workspace_id = var.log_analytics_workspace_id
+  # }
 }
