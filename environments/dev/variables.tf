@@ -73,7 +73,7 @@ variable "acr_admin_enabled" { default = false }
 
 # Storage
 variable "storage_account_name" { default = "manoitteststorage" }
-variable "account_tier" { default = "Standard" }
+variable "account_tier" { default = "Standard" } # 보통 고정이나 변동가능
 variable "account_replication_type" { default = "LRS" }
 variable "index_document" { default = "index.html" }
 variable "error_404_document" { default = "index.html" }
@@ -86,20 +86,20 @@ variable "openvpn_public_ip_sku" { default = "Standard" }
 variable "openvpn_nic_name" { default = "openvpn-nic" }
 variable "openvpn_ip_config_name" { default = "openvpn-nic-config" }
 variable "openvpn_nsg_name" { default = "nsg-openvpn" }
-variable "openvpn_marketplace_publisher" { default = "openvpn" }
-variable "openvpn_marketplace_offer" { default = "openvpnas" }
-variable "openvpn_marketplace_plan" { default = "byol" }
+variable "openvpn_marketplace_publisher" { default = "openvpn" } # 보통 고정
+variable "openvpn_marketplace_offer" { default = "openvpnas" } # 보통 고정
+variable "openvpn_marketplace_plan" { default = "byol" } # 보통 고정
 variable "openvpn_vm_name" { default = "openvpn-test" }
 variable "openvpn_vm_size" { default = "Standard_B1s" }
 variable "openvpn_admin_username" { default = "azureuser" }
 variable "openvpn_zone" { default = "1" }
-variable "openvpn_image_publisher" { default = "openvpn" }
-variable "openvpn_image_offer" { default = "openvpnas" }
-variable "openvpn_image_sku" { default = "openvpnas" }
-variable "openvpn_image_version" { default = "latest" }
-variable "openvpn_plan_name" { default = "openvpnas" }
-variable "openvpn_plan_product" { default = "openvpnas" }
-variable "openvpn_plan_publisher" { default = "openvpn" }
+variable "openvpn_image_publisher" { default = "openvpn" } # 보통 고정
+variable "openvpn_image_offer" { default = "openvpnas" } # 보통 고정
+variable "openvpn_image_sku" { default = "openvpnas" } # 보통 고정
+variable "openvpn_image_version" { default = "latest" } # 보통 고정
+variable "openvpn_plan_name" { default = "openvpnas" } # 보통 고정
+variable "openvpn_plan_product" { default = "openvpnas" } # 보통 고정
+variable "openvpn_plan_publisher" { default = "openvpn" } # 보통 고정
 variable "openvpn_os_disk_type" { default = "Premium_LRS" }
 
 # Frontdoor
